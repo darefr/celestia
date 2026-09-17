@@ -15,3 +15,9 @@ export const playerRef = {
 export const cameraState = {
   azimuth: 0,
 }
+
+// One-shot commands issued from React (HUD) to the Player running in the frame
+// loop. The Player reads and clears these each frame.
+export const playerCommands = {
+  respawn: false,
+}

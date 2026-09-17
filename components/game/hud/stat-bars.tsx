@@ -40,13 +40,15 @@ function Bar({
 
 export function StatBars() {
   const health = useGameStore((s) => s.health)
+  const maxHealth = useGameStore((s) => s.maxHealth)
   const stamina = useGameStore((s) => s.stamina)
+  const maxStamina = useGameStore((s) => s.maxStamina)
 
   return (
     <div className="pointer-events-none absolute left-4 top-4 z-20 flex flex-col gap-2 rounded-xl bg-black/25 p-3 backdrop-blur-sm">
       <Bar
         value={health}
-        max={100}
+        max={maxHealth}
         color="#ef4444"
         trackColor="rgba(0,0,0,0.45)"
         icon={<Heart className="h-4 w-4" fill="currentColor" />}
@@ -54,7 +56,7 @@ export function StatBars() {
       />
       <Bar
         value={stamina}
-        max={100}
+        max={maxStamina}
         color="#22d3aa"
         trackColor="rgba(0,0,0,0.45)"
         icon={<Zap className="h-4 w-4" fill="currentColor" />}

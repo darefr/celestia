@@ -8,6 +8,10 @@ import { Zones } from "./zones"
 import { Player } from "./player"
 import { CameraController } from "./camera-controller"
 import { DayNightCycle } from "./day-night-cycle"
+import { Npcs } from "./npc"
+import { Enemies } from "./enemy"
+import { Combat } from "./combat"
+import { Collectibles } from "./collectibles"
 import { attachKeyboard } from "@/lib/input"
 
 export function GameCanvas() {
@@ -30,6 +34,10 @@ export function GameCanvas() {
           <Terrain />
           <Zones />
           <Player />
+          <Npcs />
+          <Enemies />
+          <Collectibles />
+          <Combat />
         </Physics>
         <CameraController />
       </Suspense>

@@ -13,8 +13,8 @@ import * as THREE from "three"
 import type { Group } from "three"
 import { CharacterModel, type CharacterLimbs } from "./character-model"
 import { input } from "@/lib/input"
-import { playerRef, cameraState } from "@/lib/player-ref"
-import { useGameStore, writeSave, loadSave } from "@/lib/game-store"
+import { playerRef, cameraState, playerCommands } from "@/lib/player-ref"
+import { useGameStore, buildSave, writeSave, loadSave } from "@/lib/game-store"
 import { terrainHeight } from "@/lib/world-config"
 
 const WALK_SPEED = 4.6
@@ -48,11 +48,7 @@ export function Player() {
     const onUnload = () => {
       if (!body.current) return
       const t = body.current.translation()
-      writeSave({
-        position: [t.x, t.y, t.z],
-        health: useGameStore.getState().health,
-        stamina: useGameStore.getState().stamina,
-      })
+      writeSave(buildSave([t.x, t.y, t.z]))
     }
     window.addEventListener("beforeunload", onUnload)
     return () => window.removeEventListener("beforeunload", onUnload)
@@ -69,6 +65,16 @@ export function Player() {
 
     const store = useGameStore.getState()
 
+    // --- One-shot respawn command from the HUD ---
+    if (playerCommands.respawn) {
+      playerCommands.respawn = false
+      const gy = terrainHeight(0, 0) + FEET_OFFSET + 2
+      b.setTranslation({ x: 0, y: gy, z: 0 }, true)
+      b.setLinvel({ x: 0, y: 0, z: 0 }, true)
+    }
+    // Freeze horizontal control while in dialogue or dead (gravity still applies).
+    const frozen = store.dead || store.dialogue !== null
+
     // --- Ground check via downward ray ---
     const t = b.translation()
     const rayOrigin = { x: t.x, y: t.y, z: t.z }
@@ -82,7 +88,7 @@ export function Player() {
     _fwd.current.set(-Math.sin(az), 0, -Math.cos(az))
     _right.current.set(-_fwd.current.z, 0, _fwd.current.x)
 
-    const mv = input.getMove()
+    const mv = frozen ? { x: 0, y: 0 } : input.getMove()
     _move.current.set(0, 0, 0)
     _move.current.addScaledVector(_fwd.current, mv.y)
     _move.current.addScaledVector(_right.current, mv.x)
@@ -91,6 +97,7 @@ export function Player() {
     if (moveLen > 1) _move.current.multiplyScalar(1 / moveLen)
 
     // --- Stamina + run gating ---
+    const maxStamina = store.maxStamina
     let stamina = store.stamina
     const wantRun = input.wantsRun() && moving && stamina > 1
     const speed = wantRun ? RUN_SPEED : WALK_SPEED
@@ -110,12 +117,12 @@ export function Player() {
     b.setLinvel({ x: targetVx, y: linvel.y, z: targetVz }, true)
 
     // --- Jump ---
-    const jumpPressed = input.consumeJump()
+    const jumpPressed = !frozen && input.consumeJump()
     if (jumpPressed && grounded && stamina > 8) {
       b.setLinvel({ x: targetVx, y: JUMP_VELOCITY, z: targetVz }, true)
       stamina -= 12
     }
-    stamina = Math.max(0, Math.min(100, stamina))
+    stamina = Math.max(0, Math.min(maxStamina, stamina))
 
     // --- Facing / yaw ---
     if (moving) {
@@ -170,7 +177,7 @@ export function Player() {
     saveTimer.current += dt
     if (saveTimer.current > 3) {
       saveTimer.current = 0
-      writeSave({ position: [t.x, t.y, t.z], health: store.health, stamina })
+      writeSave(buildSave([t.x, t.y, t.z]))
     }
   })
 

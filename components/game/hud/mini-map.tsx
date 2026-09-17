@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react"
 import { playerRef } from "@/lib/player-ref"
 import { ZONES, WORLD_SIZE } from "@/lib/world-config"
+import { NPCS, ORBS, QUESTS } from "@/lib/entities-config"
+import { enemyRegistry } from "@/lib/entity-refs"
+import { useGameStore } from "@/lib/game-store"
 
 export function MiniMap() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -67,6 +70,64 @@ export function MiniMap() {
         ctx.font = "9px system-ui, sans-serif"
         ctx.textAlign = "center"
         ctx.fillText(zone.label, cx, cy - r - 3)
+      }
+
+      const store = useGameStore.getState()
+      const quests = store.quests
+
+      // Objective markers (gold diamonds)
+      const drawDiamond = (wx: number, wz: number, s: number, color: string) => {
+        const dx = toPx(wx)
+        const dy = toPx(wz)
+        ctx.save()
+        ctx.translate(dx, dy)
+        ctx.rotate(Math.PI / 4)
+        ctx.fillStyle = color
+        ctx.fillRect(-s, -s, s * 2, s * 2)
+        ctx.restore()
+      }
+
+      // Remaining orbs while the orb quest is active
+      const orbsQ = quests.orbs
+      if (orbsQ?.status === "active") {
+        ORBS.forEach((pos, i) => {
+          if (!orbsQ.collected.includes(i)) drawDiamond(pos[0], pos[1], 3, "#fcd34d")
+        })
+      }
+      // Alive enemies while the hunt quest is active
+      if (quests.hunt?.status === "active") {
+        for (const e of enemyRegistry.values()) {
+          if (!e.alive) continue
+          ctx.beginPath()
+          ctx.arc(toPx(e.position.x), toPx(e.position.z), 2.4, 0, Math.PI * 2)
+          ctx.fillStyle = "#f87171"
+          ctx.fill()
+        }
+      }
+
+      // NPC markers
+      for (const npc of NPCS) {
+        const nx = toPx(npc.pos[0])
+        const ny = toPx(npc.pos[1])
+        ctx.beginPath()
+        ctx.arc(nx, ny, 2.4, 0, Math.PI * 2)
+        ctx.fillStyle = "#38bdf8"
+        ctx.fill()
+        // quest-giver highlight ring
+        if (npc.questId) {
+          const q = quests[npc.questId]
+          const target = QUESTS.find((d) => d.id === npc.questId)?.target ?? 0
+          let ring: string | null = null
+          if (q?.status === "inactive") ring = "#fbbf24"
+          else if (q?.status === "active" && q.progress >= target) ring = "#4ade80"
+          if (ring) {
+            ctx.beginPath()
+            ctx.arc(nx, ny, 5, 0, Math.PI * 2)
+            ctx.strokeStyle = ring
+            ctx.lineWidth = 1.5
+            ctx.stroke()
+          }
+        }
       }
 
       // player dot + facing

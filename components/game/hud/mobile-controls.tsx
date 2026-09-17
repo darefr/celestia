@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { ChevronUp } from "lucide-react"
+import { ChevronUp, Sword } from "lucide-react"
 import { setJoystick, queueJump } from "@/lib/input"
+import { queueAttack } from "@/lib/combat"
 
 const BASE = 120 // joystick base diameter (px)
 const KNOB = 54
@@ -83,6 +84,20 @@ export function MobileControls() {
           style={{ width: KNOB, height: KNOB, marginLeft: -KNOB / 2, marginTop: -KNOB / 2 }}
         />
       </div>
+
+      {/* Attack button */}
+      <button
+        data-hud
+        onPointerDown={(e) => {
+          e.preventDefault()
+          queueAttack()
+        }}
+        className="pointer-events-auto absolute bottom-32 right-8 z-30 flex h-16 w-16 touch-none select-none items-center justify-center rounded-full border border-white/25 bg-rose-500/75 text-white shadow-lg active:scale-95"
+        aria-label="Attack"
+      >
+        <Sword className="h-7 w-7" />
+        <span className="sr-only">Attack</span>
+      </button>
 
       {/* Jump button */}
       <button

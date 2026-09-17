@@ -20,7 +20,7 @@ export function TopBar() {
   const isDay = timeOfDay > 0.25 && timeOfDay < 0.75
 
   return (
-    <div className="pointer-events-none absolute left-4 top-[92px] z-20 flex items-center gap-2 sm:left-1/2 sm:top-4 sm:-translate-x-1/2">
+    <div className="pointer-events-none absolute left-4 top-[176px] z-20 flex items-center gap-2 sm:left-1/2 sm:top-4 sm:-translate-x-1/2">
       <div className="flex items-center gap-2 rounded-full bg-black/30 px-3 py-1.5 text-white backdrop-blur-sm">
         {isDay ? <Sun className="h-4 w-4 text-amber-300" /> : <Moon className="h-4 w-4 text-sky-200" />}
         <span className="font-mono text-sm tabular-nums">{formatClock(timeOfDay)}</span>
